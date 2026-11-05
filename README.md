@@ -181,6 +181,166 @@ python scripts/find_misc_fops.py ashmem --kernel firmware/kernel-688806320.elf
 - A reboot after use is the clean thing: a failed attempt leaves stale
   PI-futex state behind, which is why the tool reboots before retrying.
 
+## Python version
+
+The scripts require **Python 3.7 or newer** (`from __future__ import annotations`
+and `list[str] | None` union syntax). Python 3.6 — which is the system default on
+some older Windows installations — will raise a `SyntaxError` on import.
+
+```
+python --version        # must be 3.7+
+python gl_root.py --serial <serial> --cmd "id"
+```
+
+On Windows, if `python` resolves to 3.6, use the Microsoft Store build instead:
+
+```
+%LocalAppData%\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\python3.12.exe
+```
+
+or install Python 3.9+ from [python.org](https://python.org) and make it the
+default.
+
+---
+
+## Known issues & fixes (build 688806320)
+
+### 1 — `pm disable-user` does not stick when the package was explicitly enabled
+
+**Symptom:** running `pm disable-user com.amazon.tv.launcher/.ui.HomeActivity_vNext`
+returns `new state: enabled` and the Amazon launcher keeps claiming the home
+screen after the next exploit run.
+
+**Root cause:** a prior `pm enable com.amazon.tv.launcher` (needed to restore
+Settings access) placed `HomeActivity_vNext` in `enabledComponents`
+(state = `COMPONENT_ENABLED_STATE_ENABLED = 1`).  `disable-user` sets state 3
+(`DISABLED_USER`), which does not override an explicit enable for system
+packages in Android 5.1.
+
+**Fix:** use `pm disable` (state 2, `DISABLED`) instead:
+
+```bash
+python scripts/gl_root.py --serial <serial> \
+  --cmd "pm disable com.amazon.tv.launcher/.ui.HomeActivity_vNext"
+```
+
+Verify with:
+
+```bash
+adb shell "pm dump com.amazon.tv.launcher | grep -A3 disabledComponents"
+# → com.amazon.tv.launcher.ui.HomeActivity_vNext
+```
+
+---
+
+### 2 — Amazon launcher reclaims home after reboot even with HomeActivity_vNext disabled
+
+**Symptom:** Projectivy is set as the launcher but after a reboot the Amazon
+home appears again.
+
+**Root cause:** `com.amazon.firehomestarter` is a separate package that can
+restart the Amazon home independently of `HomeActivity_vNext`.
+
+**Fix:** disable both in one exploit run:
+
+```bash
+python scripts/gl_root.py --serial <serial> \
+  --cmd "pm disable com.amazon.tv.launcher/.ui.HomeActivity_vNext; \
+         pm disable-user com.amazon.firehomestarter"
+```
+
+---
+
+### 3 — Settings button on the remote stops working after disabling the launcher package
+
+**Symptom:** the Fire TV remote's Settings button does nothing after running
+`pm disable com.amazon.tv.launcher` or `pm disable-user com.amazon.tv.launcher`.
+
+**Root cause:** the Settings button routes through
+`com.amazon.tv.launcher/.ui.MainSettingsActivity`.  If the whole package is
+disabled, that activity is unreachable.
+
+**Fix:** keep the **package** enabled; only disable the specific home activity
+component (see issue 1).  The correct state is:
+
+| Component | State |
+|---|---|
+| `com.amazon.tv.launcher` (package) | **enabled** |
+| `com.amazon.tv.launcher/.ui.HomeActivity_vNext` | **disabled** |
+| `com.amazon.tv.launcher/.ui.MainSettingsActivity` | default (enabled) |
+
+---
+
+### 4 — `pm enable / disable` on system packages requires root; plain ADB shell is not enough
+
+**Symptom:** `adb shell "pm disable-user ..."` returns
+`SecurityException: Permission Denial ... uid=2000`.
+
+**Root cause:** PackageManagerService checks the calling UID over Binder.
+ADB shell runs as uid 2000 (`shell`).  Enabling or disabling system package
+components requires uid 0.
+
+**Fix:** always run `pm` commands through `gl_root.py`:
+
+```bash
+python scripts/gl_root.py --serial <serial> --cmd "pm disable ..."
+```
+
+---
+
+### 5 — Settings breaks if `com.amazon.webview.chromium`, `com.amazon.prism.android.service`, or `com.amazon.logan` are disabled
+
+**Symptom:** Fire TV Settings crashes or is blank after aggressive debloating.
+
+**Fix:** re-enable the three packages:
+
+```bash
+python scripts/gl_root.py --serial <serial> \
+  --cmd "pm enable com.amazon.webview.chromium; \
+         pm enable com.amazon.prism.android.service; \
+         pm enable com.amazon.logan"
+```
+
+---
+
+## Good to know
+
+- **`pm disable-user` output is misleading on Android 5.1.** The message
+  `Component … new state: enabled` does *not* mean the operation failed — it
+  reflects the resolved enabled state after all override layers are applied.
+  Always confirm with `pm dump <package> | grep -A5 disabledComponents`.
+
+- **All five kernel addresses are identical between 688805020 and 688806320.**
+  The only difference between the two builds is the build-guard string.
+  `SELINUX_ENFORCING` (`0xc0ac66f0`) was confirmed by disassembling
+  `sel_read_enforce` in the extracted ELF — not `selinux_set_enforce`, which
+  contains a misleading MOVW/MOVT pair for a different address.
+
+- **SELinux stays permissive until the next reboot.** After a successful exploit
+  run, SELinux enforcement is off for the rest of the session.  A reboot
+  restores it; run the exploit again for the next privileged operation.
+
+- **CPU governor resets on reboot.** Setting `performance` governor via
+  `/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor` is not persistent.
+  To apply it automatically, hook it into a Magisk boot script or re-apply
+  each session.
+
+- **Running the exploit binary directly via `adb shell` does not give a root
+  shell.** The binary must be invoked through `gl_root.py`, which sets up the
+  proper environment and captures the output of the privileged child process.
+  Calling `gl-exploit -c "id"` directly from an ADB shell will show
+  `uid=2000(shell)` in the output even though the internal diagnostic prints
+  `B: ROOT uid=0`.
+
+- **`adb` path on Windows.** If `adb` is not in `PATH`, pass it explicitly or
+  set `$env:PATH` before running the scripts:
+  ```powershell
+  $env:PATH += ";C:\path\to\adb-directory"
+  ```
+
+- **Recommended Python on Windows:** Python 3.12 from the Microsoft Store works
+  out of the box.  Python 3.9+ from python.org is equally fine.
+
 ## Credits
 
 GhostLock (CVE-2026-43499) — port, tooling and measurements for `tank`.
