@@ -46,6 +46,25 @@ If that is you, keep reading. Otherwise close this page and go flash amonet.
 An OTA removes the bug. If you want to keep the device exploitable, disable the
 OTA packages first (`scripts/debloat_tank.py`).
 
+## Screenshots
+
+Captured on the reference unit (`288.6.8.8_user_688806320`).  Personal info redacted.
+
+**Navigation flow — long-press HOME → Fire TV quick menu → Settings → About:**
+
+![Projectivy launcher to Settings navigation](screenshots/demo-launcher-to-settings.gif)
+
+| | |
+|---|---|
+| ![Projectivy as home launcher](screenshots/01-projectivy-home.png) | ![Fire TV Settings](screenshots/02-settings-main.png) |
+| Projectivy running as default home (Amazon launcher disabled) | Fire TV Settings — accessible via long-press HOME or MENU → Android settings |
+
+![Fire OS 5.2.9.5 (688806320) — About page](screenshots/03-about.png)
+
+*About page: Fire OS 5.2.9.5 (build 688806320), Fire TV Stick (2nd Gen)*
+
+---
+
 ## Quick start
 
 Requirements: `adb`, USB debugging enabled on the stick, Python 3.9+.
