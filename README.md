@@ -2,7 +2,7 @@
 
 Build-guarded, re-playable, **one-shot** root for a stock Amazon Fire TV Stick
 2nd gen (AFTT, codename `tank`) running Fire OS 5.2.9.5 build
-`288.6.8.8_user_688805020` (kernel `3.10.54+`, ARM32, MT8127).
+`288.6.8.8_user_688806320` (kernel `3.10.54+`, ARM32, MT8127).
 
 No recovery, no unlocked bootloader, no Magisk, no persistent modification: the
 tool obtains a root shell for one command, and that is it. The exploit itself
@@ -29,7 +29,7 @@ one-shot session, no ~2 % chance of a panic per attempt.
 This project exists for one narrow case: you **refuse to open the device** (no
 case prying, no test point, no USB bootrom timing) and you only need one
 privileged session over ADB — debloat, disable OTA, back up app data — on a
-stick that is still on `288.6.8.8_user_688805020`.
+stick that is still on `288.6.8.8_user_688806320`.
 
 If that is you, keep reading. Otherwise close this page and go flash amonet.
 
@@ -38,8 +38,8 @@ If that is you, keep reading. Otherwise close this page and go flash amonet.
 | | |
 |---|---|
 | Device | Fire TV Stick 2nd gen — AFTT / `tank` |
-| Build | `288.6.8.8_user_688805020` **only** |
-| Kernel | `3.10.54+` (2024-03-13), ARM32, MT8127, no KASLR |
+| Build | `288.6.8.8_user_688806320` **only** |
+| Kernel | `3.10.54+` (2025-04-27), ARM32, MT8127, no KASLR |
 | Runs as | `shell` (uid 2000), like a stock device |
 | Guard | refuses any other device / build / kernel |
 
@@ -59,7 +59,7 @@ python scripts/gl_root.py  --serial <serial> --cmd "id; getenforce"
 Example output:
 
 ```
-build:  288.6.8.8_user_688805020 (tank)
+build:  288.6.8.8_user_688806320 (tank)
 kernel: Linux version 3.10.54+ ...
 attempt 1/3 ... ROOT (0.6s)
 ---- command output ----
@@ -150,10 +150,10 @@ run logs (see `.gitignore`). To regenerate them locally:
 
 ```bash
 python scripts/fetch_boot.py
-# firmware/boot-688805020.img, kernel-688805020.zimage, kernel-688805020.raw
+# firmware/boot-688806320.img, kernel-688806320.zimage, kernel-688806320.raw
 
 pip install vmlinux-to-elf        # or: uv tool install vmlinux-to-elf
-vmlinux-to-elf firmware/kernel-688805020.raw firmware/kernel-688805020.elf
+vmlinux-to-elf firmware/kernel-688806320.raw firmware/kernel-688806320.elf
 
 python scripts/fetch_sources.py           # index page + tarball URL only
 python scripts/fetch_sources.py --scan    # also stream and extract the sources
@@ -169,7 +169,7 @@ that the offset work relies on are committed in `source-subset/`.
 works on a freshly rebuilt ELF too:
 
 ```bash
-python scripts/find_misc_fops.py ashmem --kernel firmware/kernel-688805020.elf
+python scripts/find_misc_fops.py ashmem --kernel firmware/kernel-688806320.elf
 ```
 
 ## Safety
