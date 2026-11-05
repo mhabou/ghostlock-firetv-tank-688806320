@@ -46,7 +46,7 @@ DEV = "/data/local/tmp/gl"
 BIN = f"{DEV}/bin"
 RUNS = f"{DEV}/runs"
 
-EXPECTED_INCREMENTAL = "288.6.8.8_user_688805020"
+EXPECTED_INCREMENTAL = "288.6.8.8_user_688806320"
 EXPECTED_DEVICE = "tank"
 EXPECTED_KERNEL = "3.10.54"
 

@@ -5,9 +5,9 @@ the boot image are transferred (a few MB, not the whole ~600 MB file).
 
 Outputs (default: firmware/, which is git-ignored):
 
-    boot-688805020.img        Android boot image
-    kernel-688805020.zimage   compressed kernel payload
-    kernel-688805020.raw      decompressed kernel: input for vmlinux-to-elf
+    boot-688806320.img        Android boot image
+    kernel-688806320.zimage   compressed kernel payload
+    kernel-688806320.raw      decompressed kernel: input for vmlinux-to-elf
     ota-members.json          ZIP member list
     ota-source.json           URL, kernel version and bytes actually read
 
@@ -17,7 +17,7 @@ Usage:
 Then rebuild the analysable ELF:
 
     pip install vmlinux-to-elf
-    vmlinux-to-elf firmware/kernel-688805020.raw firmware/kernel-688805020.elf
+    vmlinux-to-elf firmware/kernel-688806320.raw firmware/kernel-688806320.elf
 """
 
 from __future__ import annotations
@@ -34,9 +34,9 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 URL = (
-    "https://d1s31zyz7dcc2d.cloudfront.net/2024/3/14/"
-    "c5752488-58a3-4fe0-9ebf-9e4c3cc7d8a8/"
-    "update-kindle-full_tank-288.6.8.8_user_688805020.bin"
+    "https://d1s31zyz7dcc2d.cloudfront.prod.ota-cloudfront.net/2025/4/27/"
+    "38765e03-905b-4f61-9ae5-332b496aa60a/"
+    "update-kindle-full_tank-288.6.8.8_user_688806320.bin"
 )
 MAX_BYTES = 64 * 1024 * 1024
 
@@ -136,20 +136,20 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(f"expected one boot image, found {targets}")
         boot = archive.read(targets[0])
 
-    (out / "boot-688805020.img").write_bytes(boot)
+    (out / "boot-688806320.img").write_bytes(boot)
     if boot[:8] != b"ANDROID!":
         raise SystemExit(f"unexpected boot header {boot[:16]!r}")
 
     kernel_size = struct.unpack_from("<I", boot, 8)[0]
     page_size = struct.unpack_from("<I", boot, 36)[0]
     kernel = boot[page_size:page_size + kernel_size]
-    (out / "kernel-688805020.zimage").write_bytes(kernel)
+    (out / "kernel-688806320.zimage").write_bytes(kernel)
     print(f"boot bytes: {len(boot)}, kernel bytes: {len(kernel)}, page size: {page_size}",
           flush=True)
 
     cursor = 0
     image, version = decompress_kernel(kernel)
-    (out / "kernel-688805020.raw").write_bytes(image)
+    (out / "kernel-688806320.raw").write_bytes(image)
     print(f"EXACT KERNEL: {version}", flush=True)
     print(f"HTTP bytes read: {reader.transferred}", flush=True)
 
@@ -157,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps({"url": URL, "version": version, "http_bytes": reader.transferred}, indent=2),
         encoding="utf-8",
     )
-    print(f"wrote {out}/kernel-688805020.raw — now run vmlinux-to-elf", flush=True)
+    print(f"wrote {out}/kernel-688806320.raw — now run vmlinux-to-elf", flush=True)
     return 0
 
 
