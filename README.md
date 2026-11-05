@@ -4,6 +4,10 @@ Build-guarded, re-playable, **one-shot** root for a stock Amazon Fire TV Stick
 2nd gen (AFTT, codename `tank`) running Fire OS 5.2.9.5 build
 `288.6.8.8_user_688806320` (kernel `3.10.54+`, ARM32, MT8127).
 
+**No hardware disassembly required** — no case prying, no test point, no short
+circuit, no USB bootrom timing. Everything runs over a standard ADB connection
+to a stock, sealed device.
+
 No recovery, no unlocked bootloader, no Magisk, no persistent modification: the
 tool obtains a root shell for one command, and that is it. The exploit itself
 only touches kernel memory; the PC side never writes outside
@@ -38,6 +42,7 @@ If that is you, keep reading. Otherwise close this page and go flash amonet.
 | | |
 |---|---|
 | Device | Fire TV Stick 2nd gen — AFTT / `tank` |
+| Hardware | **None** — no disassembly, no short circuit, no test point |
 | Build | `288.6.8.8_user_688806320` **only** |
 | Kernel | `3.10.54+` (2025-04-27), ARM32, MT8127, no KASLR |
 | Runs as | `shell` (uid 2000), like a stock device |
